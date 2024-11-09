@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with Kenyan Constitution</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #chat {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #responses {
+            margin-top: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h3>Querying The Kenya Constitution 2010</h3> 
+    
+    <div id="chat">
+        <input id="message" placeholder="Type your query..."/>
+        <button onclick="sendMessage()">Send</button>
+        <div id="responses"></div>
+    </div>
+    
+    <script>
+        var socket = io();
+
+        function sendMessage() {
+            var message = $('#message').val();
+            socket.emit('message', {data: message});
+            $('#message').val('');
+        }
+
+        socket.on('response', function(data) {
+            $('#responses').append('<div>' + data.data + '</div>');
+        });
+    </script>
+</body>
+</html>

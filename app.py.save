@@ -1,0 +1,45 @@
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
+import fitz  # PyMuPDF
+
+app = Flask(__name__)
+socketio = SocketIO(app)
+
+def extract_text_from_pdf(pdf_path):
+    """Extracts text from the specified PDF file."""
+    document = fitz.open(pdf_path)
+    text = ""
+    for page in document:
+        text += page.get_text()
+    document.close()
+    return text
+
+def process_query(query, full_text):
+    """Processes the user's query and returns relevant text from the PDF."""
+    if "chapter 2" in query.lower():  # Example to find Chapter 2
+        start_index = full_text.lower().find("chapter 2")
+        if start_index != -1:
+            end_index = full_text.lower().find("chapter 3", start_index)
+            if end_index == -1:
+                end_index = len(full_text)
+            return full_text[start_index:end_index]
+    
+    return "I couldn't find that information in the document."
+
+# Load the PDF content once when the app starts
+pdf_path = "/Users/admini/Documents/dev/convorc/KenyaConstitution2010.pdf"
+constitution_text = extract_text_from_pdf(pdf_path)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@socketio.on('message')
+def handle_message(data):
+    user_query = data['data']  # Extract the user's message
+    response = process_query(user_query, constitution_text)  # Process the query
+    emit('response', {"data": response})  # Send the response back to the client
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
+
